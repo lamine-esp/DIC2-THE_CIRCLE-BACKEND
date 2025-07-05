@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: regulation_prix_mysql
+    command: [
+      "--character-set-server=utf8mb4",
+      "--collation-server=utf8mb4_unicode_ci",
+      "--init-connect=SET NAMES utf8mb4",
+      "--innodb-default-row-format=DYNAMIC"
+    ]
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: regulation_prix_senegal
+      MYSQL_USER: thecircle
+      MYSQL_PASSWORD: thecirclepasswd
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql-config/my.cnf:/etc/mysql/my.cnf
+      - ./src/main/resources/schema_regulation_prix_senegal.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./src/main/resources/data.sql:/docker-entrypoint-initdb.d/02-data.sql
+    networks:
+      - regulation_network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+
+networks:
+  regulation_network:
+    driver: bridge
