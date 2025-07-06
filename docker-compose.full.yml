@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: regulation_prix_mysql
+    command: [
+      "--character-set-server=utf8mb4",
+      "--collation-server=utf8mb4_unicode_ci",
+      "--init-connect=SET NAMES utf8mb4",
+      "--innodb-default-row-format=DYNAMIC"
+    ]
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: regulation_prix_senegal
+      MYSQL_USER: thecircle
+      MYSQL_PASSWORD: thecirclepasswd
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql-config/my.cnf:/etc/mysql/my.cnf
+      - ./src/main/resources/schema_regulation_prix_senegal.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./src/main/resources/data.sql:/docker-entrypoint-initdb.d/02-data.sql
+    networks:
+      - regulation_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  app:
+    build: .
+    container_name: regulation_prix_app
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/regulation_prix_senegal?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: thecircle
+      SPRING_DATASOURCE_PASSWORD: thecirclepasswd
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect
+      SPRING_JPA_PROPERTIES_HIBERNATE_CONNECTION_CHARACTERENCODING: utf8mb4
+      SPRING_JPA_PROPERTIES_HIBERNATE_CONNECTION_CHARSET: UTF-8
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      JAVA_OPTS: -Xmx512m -Xms256m -XX:+UseG1GC
+    ports:
+      - "8080:8080"
+    networks:
+      - regulation_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  mysql_data:
+
+networks:
+  regulation_network:
+    driver: bridge
