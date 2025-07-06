@@ -1,9 +1,45 @@
 target/
 !target/*.jar
+
+# Git
 .git
 .gitignore
+
+# Documentation
 README.md
 README_RESUME.md
+*.md
+
+# Docker
 Dockerfile
-docker-compose.yml
+docker-compose*.yml
 .dockerignore
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Scripts de test
+test_*.ps1
+test_*.sh
+build-docker.*
+start.ps1
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+*.tmp
+
+# Maven wrapper (garde seulement les fichiers nécessaires)
+.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.properties
+
+# Configuration locale
+application-local.properties
